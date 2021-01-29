@@ -142,7 +142,7 @@ pub trait Router: StatelessService + Listen {
         check_domain_for(
             ListenersHelper::new(self.listeners()),
             self.id(),
-            self.name().as_str(),
+            self.name(),
             self.domains(),
             self.id().into(),
             self.context().execution_id(),
@@ -156,7 +156,7 @@ pub trait Database: StatefulService {
         check_domain_for(
             ListenersHelper::new(&listeners),
             self.id(),
-            self.name().as_str(),
+            self.name(),
             domains,
             self.id().into(),
             self.context().execution_id(),

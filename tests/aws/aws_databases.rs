@@ -12,6 +12,7 @@ use qovery_engine::transaction::TransactionResult;
 use crate::aws::aws_environment::{delete_environment, deploy_environment};
 
 use self::test_utilities::utilities::{engine_run_test, generate_id};
+use qovery_engine::cloud_provider::utilities::generate_prefixed_name;
 
 /**
 **
@@ -61,10 +62,7 @@ fn deploy_an_environment_with_3_databases_and_3_apps() {
 fn postgresql_failover_dev_environment_with_all_options() {
     init();
 
-    let span = span!(
-        Level::INFO,
-        "postgresql_deploy_a_working_development_environment_with_all_options"
-    );
+    let span = span!(Level::INFO, "postgresql_failover_dev_environment_with_all_options");
     let _enter = span.enter();
 
     let context = context();
@@ -281,6 +279,8 @@ fn test_postgresql_configuration(context: Context, mut environment: Environment,
         let _enter = span.enter();
         let context_for_delete = context.clone_not_same_execution_id();
 
+        let suffix = generate_id();
+        let application_name = generate_prefixed_name("postgresql", &format!("{}-{}", "postgresql-app", &suffix));
         let database_host = "postgres-".to_string() + generate_id().as_str() + ".CHANGE-ME/DEFAULT_TEST_DOMAIN"; //
         let database_port = 5432;
         let database_db_name = "postgres".to_string();
@@ -313,6 +313,7 @@ fn test_postgresql_configuration(context: Context, mut environment: Environment,
             .applications
             .into_iter()
             .map(|mut app| {
+                app.name = application_name.to_string();
                 app.branch = "postgres-app".to_string();
                 app.commit_id = "ad65b24a0470e7e8aa0983e036fb9a05928fd973".to_string();
                 app.private_port = Some(1234);
@@ -342,7 +343,7 @@ fn test_postgresql_configuration(context: Context, mut environment: Environment,
                 app
             })
             .collect::<Vec<qovery_engine::models::Application>>();
-        environment.routers[0].routes[0].application_name = "postgres-app".to_string();
+        environment.routers[0].routes[0].application_name = application_name.to_string();
 
         let mut environment_delete = environment.clone();
         environment_delete.action = Action::Delete;
@@ -461,6 +462,8 @@ fn test_mongodb_configuration(context: Context, mut environment: Environment, ve
     let _enter = span.enter();
     let context_for_delete = context.clone_not_same_execution_id();
 
+    let suffix = generate_id();
+    let application_name = generate_prefixed_name("mongodb", &format!("{}-{}", "mysql-app", &suffix));
     let database_host = "mongodb-".to_string() + generate_id().as_str() + ".CHANGE-ME/DEFAULT_TEST_DOMAIN"; // External access check
     let database_port = 27017;
     let database_db_name = "my-mongodb".to_string();
@@ -497,6 +500,7 @@ fn test_mongodb_configuration(context: Context, mut environment: Environment, ve
         .applications
         .into_iter()
         .map(|mut app| {
+            app.name = application_name.to_string();
             app.branch = "mongodb-app".to_string();
             app.commit_id = "3fdc7e784c1d98b80446be7ff25e35370306d9a8".to_string();
             app.private_port = Some(1234);
@@ -542,7 +546,7 @@ fn test_mongodb_configuration(context: Context, mut environment: Environment, ve
             app
         })
         .collect::<Vec<qovery_engine::models::Application>>();
-    environment.routers[0].routes[0].application_name = "mongodb-app".to_string();
+    environment.routers[0].routes[0].application_name = application_name.to_string();
 
     let mut environment_delete = environment.clone();
     environment_delete.action = Action::Delete;
@@ -658,6 +662,8 @@ fn test_mysql_configuration(context: Context, mut environment: Environment, vers
 
         let deletion_context = context.clone_not_same_execution_id();
 
+        let suffix = generate_id();
+        let application_name = generate_prefixed_name("mysql", &format!("{}-{}", "mysql-app", &suffix));
         let database_host = "mysql-".to_string() + generate_id().as_str() + ".CHANGE-ME/DEFAULT_TEST_DOMAIN"; // External access check
         let database_port = 3306;
         let database_db_name = "mysqldatabase".to_string();
@@ -690,6 +696,7 @@ fn test_mysql_configuration(context: Context, mut environment: Environment, vers
             .applications
             .into_iter()
             .map(|mut app| {
+                app.name = application_name.to_string();
                 app.branch = "mysql-app".to_string();
                 app.commit_id = "fc8a87b39cdee84bb789893fb823e3e62a1999c0".to_string();
                 app.private_port = Some(1234);
@@ -727,7 +734,7 @@ fn test_mysql_configuration(context: Context, mut environment: Environment, vers
                 app
             })
             .collect::<Vec<qovery_engine::models::Application>>();
-        environment.routers[0].routes[0].application_name = "mysql-app".to_string();
+        environment.routers[0].routes[0].application_name = application_name.to_string();
 
         let mut environment_delete = environment.clone();
         environment_delete.action = Action::Delete;
@@ -815,6 +822,8 @@ fn test_redis_configuration(context: Context, mut environment: Environment, vers
 
         let context_for_delete = context.clone_not_same_execution_id();
 
+        let suffix = generate_id();
+        let application_name = generate_prefixed_name("redis", &format!("{}-{}", "redis-app", &suffix));
         let database_host = "redis-".to_string() + generate_id().as_str() + ".CHANGE-ME/DEFAULT_TEST_DOMAIN"; // External access check
         let database_port = 6379;
         let database_db_name = "my-redis".to_string();
@@ -847,7 +856,7 @@ fn test_redis_configuration(context: Context, mut environment: Environment, vers
             .applications
             .into_iter()
             .map(|mut app| {
-                app.name = "redis-app".to_string();
+                app.name = application_name.to_string();
                 app.branch = "redis-app".to_string();
                 app.commit_id = "80ad41fbe9549f8de8dbe2ca4dd5d23e8ffc92de".to_string();
                 app.private_port = Some(1234);
@@ -885,7 +894,7 @@ fn test_redis_configuration(context: Context, mut environment: Environment, vers
                 app
             })
             .collect::<Vec<qovery_engine::models::Application>>();
-        environment.routers[0].routes[0].application_name = "redis-app".to_string();
+        environment.routers[0].routes[0].application_name = application_name.to_string();
 
         let mut environment_delete = environment.clone();
         environment_delete.action = Action::Delete;
