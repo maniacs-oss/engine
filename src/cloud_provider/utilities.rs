@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::error::{EngineError, StringError};
+use crate::error::{EngineError, EngineErrorCause, EngineErrorScope, StringError};
 use crate::models::{ListenersHelper, ProgressInfo, ProgressLevel, ProgressScope};
 use chrono::Duration;
 use core::option::Option::{None, Some};
@@ -335,6 +335,8 @@ pub fn check_cname_for(
 
 pub fn check_domain_for(
     listener_helper: ListenersHelper,
+    router_id: &str,
+    router_name: &str,
     domains_to_check: Vec<&str>,
     execution_id: &str,
     context_id: &str,
@@ -392,20 +394,27 @@ pub fn check_domain_for(
             }
             Err(_) => {
                 let message = format!(
-                    "Unable to check domain availability for '{}'. It can be due to a \
-                        too long domain propagation. Note: this is not critical.",
-                    domain
+                    "Unable to check domain availability for '{}' ({}). It can be due to a too long domain name propagation.",
+                    domain,
+                    router_name,
                 );
 
-                warn!("{}", message);
+                error!("{}", &message);
 
                 listener_helper.error(ProgressInfo::new(
                     ProgressScope::Environment {
                         id: execution_id.to_string(),
                     },
                     ProgressLevel::Warn,
-                    Some(message),
+                    Some(&message),
                     context_id,
+                ));
+
+                return Err(EngineError::new(
+                    EngineErrorCause::Internal,
+                    EngineErrorScope::Router(router_id.to_string(), router_name.to_string()),
+                    execution_id.to_string(),
+                    Some(&message),
                 ));
             }
         }
